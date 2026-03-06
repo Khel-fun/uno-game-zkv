@@ -1,0 +1,386 @@
+{
+  "gameCodes": [
+    [
+      "RFFS2CPD",
+      {
+        "gameId": "4",
+        "roomId": "game-4",
+        "isPrivate": false,
+        "createdAt": 1770744208369
+      }
+    ],
+    [
+      "GAYGA3YN",
+      {
+        "gameId": "5",
+        "roomId": "game-5",
+        "isPrivate": true,
+        "createdAt": 1770744249923
+      }
+    ],
+    [
+      "CF5BDBTC",
+      {
+        "gameId": "6",
+        "roomId": "game-6",
+        "isPrivate": false,
+        "createdAt": 1770903502166
+      }
+    ],
+    [
+      "ULVVR2MJ",
+      {
+        "gameId": "7",
+        "roomId": "game-7",
+        "isPrivate": false,
+        "createdAt": 1770903526526
+      }
+    ],
+    [
+      "LR3PQR5G",
+      {
+        "gameId": "8",
+        "roomId": "game-8",
+        "isPrivate": true,
+        "createdAt": 1770903560281
+      }
+    ],
+    [
+      "59NQ52EP",
+      {
+        "gameId": "9",
+        "roomId": "game-9",
+        "isPrivate": true,
+        "createdAt": 1770903618118
+      }
+    ],
+    [
+      "RKG5YJCA",
+      {
+        "gameId": "10",
+        "roomId": "game-10",
+        "isPrivate": true,
+        "createdAt": 1770903885960
+      }
+    ],
+    [
+      "JLQSQL5F",
+      {
+        "gameId": "23",
+        "roomId": "game-23",
+        "isPrivate": false,
+        "createdAt": 1771791950603
+      }
+    ],
+    [
+      "CXQXDNBG",
+      {
+        "gameId": "1",
+        "roomId": "game-1",
+        "isPrivate": false,
+        "createdAt": 1771793499939
+      }
+    ],
+    [
+      "5W7CS5VW",
+      {
+        "gameId": "2",
+        "roomId": "game-2",
+        "isPrivate": false,
+        "createdAt": 1771795131885
+      }
+    ],
+    [
+      "3573THC3",
+      {
+        "gameId": "1",
+        "roomId": "game-1",
+        "isPrivate": false,
+        "createdAt": 1771798084063
+      }
+    ],
+    [
+      "T8TKRX7Y",
+      {
+        "gameId": "2",
+        "roomId": "game-2",
+        "isPrivate": false,
+        "createdAt": 1771798455297
+      }
+    ],
+    [
+      "2WQVYDS3",
+      {
+        "gameId": "3",
+        "roomId": "game-3",
+        "isPrivate": false,
+        "createdAt": 1771798705599
+      }
+    ],
+    [
+      "4KUCU53M",
+      {
+        "gameId": "4",
+        "roomId": "game-4",
+        "isPrivate": false,
+        "createdAt": 1771799907476
+      }
+    ],
+    [
+      "XJXD94SD",
+      {
+        "gameId": "5",
+        "roomId": "game-5",
+        "isPrivate": false,
+        "createdAt": 1771800705436
+      }
+    ],
+    [
+      "Q5K8SFD8",
+      {
+        "gameId": "6",
+        "roomId": "game-6",
+        "isPrivate": false,
+        "createdAt": 1771803517403
+      }
+    ],
+    [
+      "WBRQGV4P",
+      {
+        "gameId": "7",
+        "roomId": "game-7",
+        "isPrivate": false,
+        "createdAt": 1771803667387
+      }
+    ],
+    [
+      "98QXQ3MX",
+      {
+        "gameId": "8",
+        "roomId": "game-8",
+        "isPrivate": false,
+        "createdAt": 1771803833094
+      }
+    ],
+    [
+      "YYYDCF35",
+      {
+        "gameId": "9",
+        "roomId": "game-9",
+        "isPrivate": false,
+        "createdAt": 1771805999840
+      }
+    ],
+    [
+      "UJG9YA39",
+      {
+        "gameId": "10",
+        "roomId": "game-10",
+        "isPrivate": false,
+        "createdAt": 1771806175090
+      }
+    ],
+    [
+      "E7F47CQ8",
+      {
+        "gameId": "11",
+        "roomId": "game-11",
+        "isPrivate": false,
+        "createdAt": 1771806294329
+      }
+    ],
+    [
+      "DRDZ4QJE",
+      {
+        "gameId": "12",
+        "roomId": "game-12",
+        "isPrivate": false,
+        "createdAt": 1771807629965
+      }
+    ],
+    [
+      "BPCEKBK2",
+      {
+        "gameId": "13",
+        "roomId": "game-13",
+        "isPrivate": false,
+        "createdAt": 1771807842134
+      }
+    ],
+    [
+      "7G6CFFMU",
+      {
+        "gameId": "14",
+        "roomId": "game-14",
+        "isPrivate": false,
+        "createdAt": 1771807930142
+      }
+    ],
+    [
+      "K92AT2TJ",
+      {
+        "gameId": "15",
+        "roomId": "game-15",
+        "isPrivate": false,
+        "createdAt": 1771807938902
+      }
+    ],
+    [
+      "DCWZ5MR6",
+      {
+        "gameId": "16",
+        "roomId": "game-16",
+        "isPrivate": false,
+        "createdAt": 1771808119284
+      }
+    ],
+    [
+      "TRP2TNNL",
+      {
+        "gameId": "17",
+        "roomId": "game-17",
+        "isPrivate": false,
+        "createdAt": 1771809445076
+      }
+    ],
+    [
+      "GRWYYDAG",
+      {
+        "gameId": "18",
+        "roomId": "game-18",
+        "isPrivate": false,
+        "createdAt": 1771809556197
+      }
+    ],
+    [
+      "T23PNQCS",
+      {
+        "gameId": "19",
+        "roomId": "game-19",
+        "isPrivate": false,
+        "createdAt": 1771809614789
+      }
+    ],
+    [
+      "DVDTFMG4",
+      {
+        "gameId": "20",
+        "roomId": "game-20",
+        "isPrivate": false,
+        "createdAt": 1771810708184
+      }
+    ],
+    [
+      "HEYD98Q7",
+      {
+        "gameId": "21",
+        "roomId": "game-21",
+        "isPrivate": false,
+        "createdAt": 1771810835524
+      }
+    ],
+    [
+      "SSY76NLR",
+      {
+        "gameId": "22",
+        "roomId": "game-22",
+        "isPrivate": false,
+        "createdAt": 1771810945894
+      }
+    ]
+  ],
+  "gameIdToCode": [
+    [
+      "4",
+      "4KUCU53M"
+    ],
+    [
+      "5",
+      "XJXD94SD"
+    ],
+    [
+      "6",
+      "Q5K8SFD8"
+    ],
+    [
+      "7",
+      "WBRQGV4P"
+    ],
+    [
+      "8",
+      "98QXQ3MX"
+    ],
+    [
+      "9",
+      "YYYDCF35"
+    ],
+    [
+      "10",
+      "UJG9YA39"
+    ],
+    [
+      "23",
+      "JLQSQL5F"
+    ],
+    [
+      "1",
+      "3573THC3"
+    ],
+    [
+      "2",
+      "T8TKRX7Y"
+    ],
+    [
+      "3",
+      "2WQVYDS3"
+    ],
+    [
+      "11",
+      "E7F47CQ8"
+    ],
+    [
+      "12",
+      "DRDZ4QJE"
+    ],
+    [
+      "13",
+      "BPCEKBK2"
+    ],
+    [
+      "14",
+      "7G6CFFMU"
+    ],
+    [
+      "15",
+      "K92AT2TJ"
+    ],
+    [
+      "16",
+      "DCWZ5MR6"
+    ],
+    [
+      "17",
+      "TRP2TNNL"
+    ],
+    [
+      "18",
+      "GRWYYDAG"
+    ],
+    [
+      "19",
+      "T23PNQCS"
+    ],
+    [
+      "20",
+      "DVDTFMG4"
+    ],
+    [
+      "21",
+      "HEYD98Q7"
+    ],
+    [
+      "22",
+      "SSY76NLR"
+    ]
+  ]
+}
