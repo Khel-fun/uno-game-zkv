@@ -1,0 +1,11 @@
+{
+  "network": "baseSepolia",
+  "chainId": 84532,
+  "contracts": {
+    "shuffleVerifier": "0x47632313817F8486C5Df6270cB71F088EfA66021",
+    "dealVerifier": "0xcBe245bA8D681783c60f97AD707c60A4Bd805e4E",
+    "drawVerifier": "0x299a2FcA4801e04C636F510a0302Fb56c3a99b3C",
+    "playVerifier": "0x579DfefD954c7a2540fCEA770049444E493aB0fA",
+    "unoGame": "0x461eeE2BbAc5AA51ed8ED7A309fc9aF32E98E662"
+  }
+}
