@@ -1,0 +1,10 @@
+[package]
+name = "zk_uno"
+type = "lib"
+authors = ["Zunno Team"]
+compiler_version = ">=1.0.0"
+
+[dependencies]
+# No external dependencies - uses only Noir stdlib
+# Pedersen hash from std::hash::pedersen_hash
+# Self-implemented Merkle tree
