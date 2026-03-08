@@ -20,7 +20,7 @@ import { unoGameABI } from "@/constants/unogameabi";
 import ProfileDropdown from "@/components/profileDropdown";
 import { socketManager } from "@/services/socket";
 import { AddToFarcaster } from "@/components/AddToFarcaster";
-import NetworkDropdown from "@/components/NetworkDropdown";
+
 import {
   getContractAddress,
   isSupportedChain,
@@ -34,12 +34,17 @@ import {
   checkCUSDBalance,
   getMiniPayAddress,
 } from "@/utils/miniPayUtils";
-import { encodeFunctionData, keccak256, toBytes, toHex, stringToHex } from "viem";
-import { useNetworkSelection } from "@/hooks/useNetworkSelection";
+import {
+  encodeFunctionData,
+  keccak256,
+  toBytes,
+  toHex,
+  stringToHex,
+} from "viem";
 
 // GameCreated event signature - now includes isPrivate param
 const GAME_CREATED_EVENT_SIGNATURE = keccak256(
-  toBytes("GameCreated(uint256,address,bool)")
+  toBytes("GameCreated(uint256,address,bool)"),
 );
 
 /**
@@ -63,7 +68,7 @@ function generateGameCode(): string {
  */
 function extractGameIdFromLogs(
   logs: any[],
-  contractAddress?: string
+  contractAddress?: string,
 ): bigint | null {
   for (let i = 0; i < logs.length; i++) {
     const log = logs[i];
@@ -119,15 +124,18 @@ export default function PlayGame() {
 
   const router = useRouter();
 
-  const { selectedNetwork, isInitialized } = useNetworkSelection();
-  const { address: wagmiAddress, isConnected: wagmiConnected, chain: walletChain } = useAccount();
+  const {
+    address: wagmiAddress,
+    isConnected: wagmiConnected,
+    chain: walletChain,
+  } = useAccount();
   const { authenticated, ready: privyReady, connectWallet } = usePrivy();
-  
+
   // User is "wallet ready" when authenticated via Privy AND wagmi has an address.
   // During network switches, wagmi may briefly disconnect — use `authenticated` as
   // the stable signal so the user isn't bounced back to the connect screen.
-  const isWalletReady = authenticated && (wagmiConnected && !!wagmiAddress);
-  
+  const isWalletReady = authenticated && wagmiConnected && !!wagmiAddress;
+
   // Auto-reconnect: If user is authenticated via Privy but wagmi lost connection
   // (e.g. after page reload or network switch), prompt Privy to reconnect the wallet.
   useEffect(() => {
@@ -139,8 +147,8 @@ export default function PlayGame() {
       return () => clearTimeout(timer);
     }
   }, [privyReady, authenticated, wagmiConnected, connectWallet]);
-  
-  const chainId = walletChain?.id || selectedNetwork.id;
+
+  const chainId = walletChain?.id || 84532;
   const address =
     isMiniPayWallet && miniPayAddress ? miniPayAddress : wagmiAddress;
   const { data: walletClient } = useWalletClient();
@@ -177,12 +185,14 @@ export default function PlayGame() {
   const contractAddress = getContractAddress(chainId) as `0x${string}`;
 
   // Fetch public not-started games for "Browse Public" tab
-  const { data: publicGamesRaw, refetch: refetchPublicGames } = useReadContract({
-    address: contractAddress,
-    abi: unoGameABI,
-    functionName: "getPublicNotStartedGames",
-    chainId,
-  });
+  const { data: publicGamesRaw, refetch: refetchPublicGames } = useReadContract(
+    {
+      address: contractAddress,
+      abi: unoGameABI,
+      functionName: "getPublicNotStartedGames",
+      chainId,
+    },
+  );
   const publicGames = publicGamesRaw as readonly bigint[] | undefined;
 
   // Fetch games by creator for "My Games" tab
@@ -190,7 +200,10 @@ export default function PlayGame() {
     address: contractAddress,
     abi: unoGameABI,
     functionName: "getGamesByCreator",
-    args: [(address || "0x0000000000000000000000000000000000000000") as `0x${string}`],
+    args: [
+      (address ||
+        "0x0000000000000000000000000000000000000000") as `0x${string}`,
+    ],
     query: { enabled: !!address },
     chainId,
   });
@@ -246,7 +259,7 @@ export default function PlayGame() {
           contractAddr,
           data,
           address as string,
-          chainId
+          chainId,
         );
         return hash as `0x${string}`;
       } else if (isWalletReady && address) {
@@ -265,7 +278,7 @@ export default function PlayGame() {
       isWalletReady,
       sendMiniPayTransaction,
       sendWagmiTransaction,
-    ]
+    ],
   );
 
   /**
@@ -278,7 +291,7 @@ export default function PlayGame() {
       }
       return null;
     },
-    [publicClient]
+    [publicClient],
   );
 
   // ========================================
@@ -329,7 +342,7 @@ export default function PlayGame() {
 
       if (!isSupportedChain(chainId)) {
         throw new Error(
-          `Unsupported network. Supported: ${getSupportedChainIds().join(", ")}`
+          `Unsupported network. Supported: ${getSupportedChainIds().join(", ")}`,
         );
       }
 
@@ -339,13 +352,25 @@ export default function PlayGame() {
         data = encodeFunctionData({
           abi: unoGameABI,
           functionName: "createGame",
-          args: [address as `0x${string}`, false, true, codeHash, BigInt(maxPlayersSelection)],
+          args: [
+            address as `0x${string}`,
+            false,
+            true,
+            codeHash,
+            BigInt(maxPlayersSelection),
+          ],
         });
       } else {
         data = encodeFunctionData({
           abi: unoGameABI,
           functionName: "createGame",
-          args: [address as `0x${string}`, false, false, "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`, BigInt(maxPlayersSelection)],
+          args: [
+            address as `0x${string}`,
+            false,
+            false,
+            "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
+            BigInt(maxPlayersSelection),
+          ],
         });
       }
 
@@ -361,12 +386,11 @@ export default function PlayGame() {
       const receipt = await waitForReceipt(hash);
       if (receipt) {
         if (receipt.status === "reverted") {
-          throw new Error("Transaction reverted on-chain. Game was not created.");
+          throw new Error(
+            "Transaction reverted on-chain. Game was not created.",
+          );
         }
-        const newGameId = extractGameIdFromLogs(
-          receipt.logs,
-          contractAddress
-        );
+        const newGameId = extractGameIdFromLogs(receipt.logs, contractAddress);
         if (newGameId) {
           const gameIdStr = newGameId.toString();
           setGameId(newGameId);
@@ -374,12 +398,16 @@ export default function PlayGame() {
           // Register game code with backend for private games
           socketManager.emit(
             "createGameRoom",
-            { gameId: gameIdStr, isPrivate: isPrivateGame, gameCode: isPrivateGame ? generatedCode : undefined },
+            {
+              gameId: gameIdStr,
+              isPrivate: isPrivateGame,
+              gameCode: isPrivateGame ? generatedCode : undefined,
+            },
             (response: { gameCode?: string }) => {
               if (isPrivateGame && response?.gameCode) {
                 console.log("Backend game code registered:", response.gameCode);
               }
-            }
+            },
           );
 
           toast({
@@ -446,12 +474,11 @@ export default function PlayGame() {
       const receipt = await waitForReceipt(hash);
       if (receipt) {
         if (receipt.status === "reverted") {
-          throw new Error("Transaction reverted on-chain. Game was not created.");
+          throw new Error(
+            "Transaction reverted on-chain. Game was not created.",
+          );
         }
-        const newGameId = extractGameIdFromLogs(
-          receipt.logs,
-          contractAddress
-        );
+        const newGameId = extractGameIdFromLogs(receipt.logs, contractAddress);
         if (newGameId) {
           const gameIdStr = newGameId.toString();
           setGameId(newGameId);
@@ -494,9 +521,8 @@ export default function PlayGame() {
     const gameIdStr = gameId.toString();
 
     // Check if user is the creator / already in this game
-    const isCreator = myGames && myGames.some(
-      (g: bigint) => g.toString() === gameIdStr
-    );
+    const isCreator =
+      myGames && myGames.some((g: bigint) => g.toString() === gameIdStr);
     if (isCreator) {
       // Owner already joined during createGame — skip on-chain call
       router.push(`/game/${gameIdStr}`);
@@ -576,28 +602,38 @@ export default function PlayGame() {
 
       // If no game ID provided, look it up from the backend via game code
       if (!resolvedGameId) {
-        const lookupResult = await new Promise<{ gameId?: string; error?: string }>((resolve) => {
+        const lookupResult = await new Promise<{
+          gameId?: string;
+          error?: string;
+        }>((resolve) => {
           let resolved = false;
           const timer = setTimeout(() => {
             if (!resolved) {
               resolved = true;
-              resolve({ error: "Lookup timed out. Please enter the Game ID manually." });
+              resolve({
+                error: "Lookup timed out. Please enter the Game ID manually.",
+              });
             }
           }, 8000);
 
-          socketManager.emit("validateGameCode", { gameCode: joinCodeInput }, (response: any) => {
-            if (!resolved) {
-              resolved = true;
-              clearTimeout(timer);
-              resolve(response || { error: "No response from server" });
-            }
-          });
+          socketManager.emit(
+            "validateGameCode",
+            { gameCode: joinCodeInput },
+            (response: any) => {
+              if (!resolved) {
+                resolved = true;
+                clearTimeout(timer);
+                resolve(response || { error: "No response from server" });
+              }
+            },
+          );
         });
 
         if (lookupResult.error || !lookupResult.gameId) {
           toast({
             title: "Invalid Game Code",
-            description: lookupResult.error || "Could not find a game with that code.",
+            description:
+              lookupResult.error || "Could not find a game with that code.",
             variant: "destructive",
             duration: 5000,
           });
@@ -695,7 +731,9 @@ export default function PlayGame() {
 
       const deleteReceipt = await waitForReceipt(hash);
       if (deleteReceipt?.status === "reverted") {
-        throw new Error("Transaction reverted on-chain. Failed to delete game.");
+        throw new Error(
+          "Transaction reverted on-chain. Failed to delete game.",
+        );
       }
 
       // Clean up game code on backend
@@ -725,14 +763,11 @@ export default function PlayGame() {
   // RENDER
   // ========================================
 
-  const currentGames =
-    activeTab === "public" ? publicGames : myGames;
+  const currentGames = activeTab === "public" ? publicGames : myGames;
   const displayedGames = currentGames
     ? [...currentGames].reverse().slice(0, displayCount)
     : [];
-  const hasMore = currentGames
-    ? displayCount < currentGames.length
-    : false;
+  const hasMore = currentGames ? displayCount < currentGames.length : false;
 
   return (
     <div
@@ -761,7 +796,7 @@ export default function PlayGame() {
               </button>
             </Link>
           )}
-          <NetworkDropdown />
+
           {isWalletReady && address && <ProfileDropdown address={address} />}
         </div>
       </div>
@@ -776,7 +811,9 @@ export default function PlayGame() {
         <div className="flex flex-col items-center justify-center min-h-[80vh] px-4">
           <div className="text-center mb-4">
             <h1 className="text-2xl font-bold mb-2">Reconnecting Wallet...</h1>
-            <p className="text-gray-400 text-sm">Please wait while we restore your session</p>
+            <p className="text-gray-400 text-sm">
+              Please wait while we restore your session
+            </p>
           </div>
           <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
         </div>
@@ -793,7 +830,7 @@ export default function PlayGame() {
           )}
           <WalletConnection />
         </div>
-      ) : !isInitialized ? (
+      ) : false ? (
         <div className="flex flex-col items-center justify-center min-h-[80vh] px-4">
           <div className="text-center mb-2">
             <h1 className="text-2xl font-bold mb-2">Loading Network...</h1>
@@ -942,7 +979,7 @@ export default function PlayGame() {
                       (address &&
                         myGames &&
                         myGames.some(
-                          (g: bigint) => g.toString() === game.toString()
+                          (g: bigint) => g.toString() === game.toString(),
                         ));
 
                     return (
@@ -1211,8 +1248,7 @@ export default function PlayGame() {
                   <button
                     onClick={joinGameWithCode}
                     disabled={
-                      joinCodeInput.length !== 8 ||
-                      joiningGameId !== null
+                      joinCodeInput.length !== 8 || joiningGameId !== null
                     }
                     className="flex-1 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-xl text-white font-medium transition-all disabled:opacity-50"
                   >
