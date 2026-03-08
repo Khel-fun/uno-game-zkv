@@ -25,7 +25,7 @@ import {
   isSupportedChain,
   getSupportedChainIds,
 } from "@/config/networks";
-import { useNetworkSelection } from "@/hooks/useNetworkSelection";
+
 import { useSendTransaction, useWaitForTransactionReceipt } from "wagmi";
 
 // Card codes: SKIP=100, DRAW2=200, DRAW4=400, WILD=500
@@ -73,19 +73,27 @@ const isDraw2Card = (card) => card.startsWith("D2");
 const isValidPlay = (card, currentColor, currentNumber) => {
   // Wild cards are always playable
   if (isWildCard(card)) return true;
-  
+
   // If game state is not initialized yet, don't allow play
-  if (!currentColor || currentColor === "" || currentNumber === undefined || currentNumber === "") {
-    console.log("[Game] Invalid move: Game state not initialized", { currentColor, currentNumber });
+  if (
+    !currentColor ||
+    currentColor === "" ||
+    currentNumber === undefined ||
+    currentNumber === ""
+  ) {
+    console.log("[Game] Invalid move: Game state not initialized", {
+      currentColor,
+      currentNumber,
+    });
     return false;
   }
-  
+
   const { color, number } = parseCard(card);
-  
+
   // Color match or number match
   const colorMatch = color === currentColor;
   const numberMatch = String(number) === String(currentNumber);
-  
+
   return colorMatch || numberMatch;
 };
 
@@ -105,9 +113,7 @@ const Game = ({
   const [computerMoveCounter, setComputerMoveCounter] = useState(0);
   const [isMiniPayWallet, setIsMiniPayWallet] = useState(false);
 
-  // Get the network selected from dropdown
-  const { selectedNetwork } = useNetworkSelection();
-  const chainId = selectedNetwork.id;
+  const chainId = 84532;
 
   // Wagmi hooks for browser wallet transactions
   const {
@@ -241,7 +247,7 @@ const Game = ({
     const validMoves = getValidMoves(player2Deck);
     if (validMoves.length === 0) return "draw";
     const special = validMoves.find(
-      (c) => isSkipCard(c) || isDraw2Card(c) || isWildCard(c)
+      (c) => isSkipCard(c) || isDraw2Card(c) || isWildCard(c),
     );
     return special || validMoves[0];
   };
@@ -323,7 +329,7 @@ const Game = ({
     socket.on("initGameState", (state) => {
       dispatch(state);
       playShufflingSound();
-      
+
       // Notify ZK integration of initial game state
       if (onZKStateChange && zkReady) {
         onZKStateChange(state, currentUser);
@@ -342,7 +348,7 @@ const Game = ({
         isUnoButtonPressed: false,
         drawButtonPressed: state.drawButtonPressed || false,
       });
-      
+
       // Notify ZK integration of game state update
       if (onZKStateChange && zkReady) {
         onZKStateChange(state, currentUser);
@@ -491,7 +497,7 @@ const Game = ({
 
         if (!isValidPlay(played_card, currentColor, currentNumber)) {
           alert(
-            "Invalid Move! Skip cards must match either the color or number of the current card."
+            "Invalid Move! Skip cards must match either the color or number of the current card.",
           );
           break;
         }
@@ -500,12 +506,12 @@ const Game = ({
         const nextPlayer = getNextPlayer(
           cardPlayedBy,
           activePlayers,
-          playDirection
+          playDirection,
         );
         const playerAfterSkipped = getNextPlayer(
           nextPlayer,
           activePlayers,
-          playDirection
+          playDirection,
         );
 
         cardPlayedByPlayer({
@@ -533,7 +539,7 @@ const Game = ({
 
         if (!isValidPlay(played_card, currentColor, currentNumber)) {
           alert(
-            "Invalid Move! Reverse cards must match either the color or number of the current card."
+            "Invalid Move! Reverse cards must match either the color or number of the current card.",
           );
           break;
         }
@@ -557,7 +563,7 @@ const Game = ({
           const nextPlayer = getNextPlayer(
             cardPlayedBy,
             activePlayers,
-            newDirection
+            newDirection,
           );
           cardPlayedByPlayer({
             cardPlayedBy,
@@ -584,7 +590,7 @@ const Game = ({
 
         if (!isValidPlay(played_card, currentColor, currentNumber)) {
           alert(
-            "Invalid Move! Draw 2 cards must match either the color or number of the current card."
+            "Invalid Move! Draw 2 cards must match either the color or number of the current card.",
           );
           break;
         }
@@ -639,7 +645,7 @@ const Game = ({
           });
         } else {
           alert(
-            "Invalid Move! You must play a card that matches either the color or number of the current card."
+            "Invalid Move! You must play a card that matches either the color or number of the current card.",
           );
         }
         break;
@@ -770,7 +776,7 @@ const Game = ({
       };
 
       const gameHash = ethers.keccak256(
-        ethers.toUtf8Bytes(JSON.stringify(gameResultData))
+        ethers.toUtf8Bytes(JSON.stringify(gameResultData)),
       );
 
       // Use MiniPay native transaction method for fee abstraction
@@ -799,12 +805,12 @@ const Game = ({
           contractAddress,
           data,
           address,
-          chainId
+          chainId,
         );
 
         toast({
           title: "Game Ended on Blockchain",
-          description: `Game recorded successfully on ${selectedNetwork.displayName}.`,
+          description: `Game recorded successfully on Base Sepolia.`,
           variant: "success",
           duration: 5000,
         });
@@ -813,8 +819,8 @@ const Game = ({
         if (!isSupportedChain(chainId)) {
           throw new Error(
             `Unsupported network! Please switch to a supported network. Current chain: ${chainId}, Supported: ${getSupportedChainIds().join(
-              ", "
-            )}`
+              ", ",
+            )}`,
           );
         }
 
@@ -882,7 +888,7 @@ const Game = ({
     if (isConfirmed && !isMiniPayWallet) {
       toast({
         title: "Game Ended on Blockchain",
-        description: `Game recorded successfully on ${selectedNetwork.displayName}.`,
+        description: `Game recorded successfully on Base Sepolia.`,
         variant: "success",
         duration: 5000,
       });

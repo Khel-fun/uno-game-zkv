@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import dynamic from 'next/dynamic';
+import dynamic from "next/dynamic";
 import Game from "./Game";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import socket, { socketManager } from "@/services/socket";
@@ -29,15 +29,19 @@ import { updateGlobalCardHashMap } from "../../lib/globalState";
 import { unoGameABI } from "@/constants/unogameabi";
 import { useToast } from "@/components/ui/use-toast";
 import { Toaster } from "@/components/ui/toaster";
-import {  
+import {
   getContractAddress,
   isSupportedChain,
   getSupportedChainIds,
 } from "@/config/networks";
-import { useNetworkSelection } from "@/hooks/useNetworkSelection";
+
 import { MAX_PLAYERS } from "@/constants/gameConstants";
 import { useWalletStorage } from "@/hooks/useWalletStorage";
-import { useAccount, usePublicClient, useSendTransaction as useWagmiSendTransaction } from "wagmi";
+import {
+  useAccount,
+  usePublicClient,
+  useSendTransaction as useWagmiSendTransaction,
+} from "wagmi";
 import {
   isMiniPay,
   sendMiniPayTransaction,
@@ -48,10 +52,13 @@ import { useZKGameIntegration } from "@/hooks/useZKGameIntegration";
 import { useZK } from "@/lib/zk";
 
 // Dynamic import for ZK components to avoid SSR issues
-const ZKProofPanel = dynamic(() => import('./ZKProofPanel').then(mod => mod.ZKProofPanel), { 
-  ssr: false,
-  loading: () => null 
-});
+const ZKProofPanel = dynamic(
+  () => import("./ZKProofPanel").then((mod) => mod.ZKProofPanel),
+  {
+    ssr: false,
+    loading: () => null,
+  },
+);
 
 type User = {
   id: string;
@@ -85,9 +92,14 @@ const Room = () => {
   const { toast } = useToast();
 
   // Use wagmi for wallet connection (works with both MetaMask and other connectors)
-  const { address: wagmiAddress, isConnected: isWalletConnected, chain: walletChain } = useAccount();
-  const { sendTransactionAsync: sendWagmiTransaction } = useWagmiSendTransaction();
-  
+  const {
+    address: wagmiAddress,
+    isConnected: isWalletConnected,
+    chain: walletChain,
+  } = useAccount();
+  const { sendTransactionAsync: sendWagmiTransaction } =
+    useWagmiSendTransaction();
+
   // Prefer wagmi address, fallback to stored address
   const address = wagmiAddress || storedAddress;
 
@@ -97,10 +109,8 @@ const Room = () => {
   const [playerHand, setPlayerHand] = useState<string[]>([]);
   const [isMiniPayWallet, setIsMiniPayWallet] = useState(false);
 
-  // Get the network selected from dropdown - but prioritize wallet's actual chain
-  const { selectedNetwork } = useNetworkSelection();
-  const chainId = walletChain?.id || selectedNetwork.id;
-  
+  const chainId = 84532;
+
   // Use public client for the wallet's current chain
   const publicClient = usePublicClient({ chainId });
 
@@ -110,10 +120,10 @@ const Room = () => {
   const zkIntegration = useZKGameIntegration({
     onProofGenerated: zkContext.trackProof,
   });
-  
+
   // Use stats from zkIntegration
   const zkStats = zkIntegration.stats;
-  
+
   // Get the contract address for the current chain
   const contractAddress = getContractAddress(chainId) as `0x${string}`;
 
@@ -196,8 +206,12 @@ const Room = () => {
           // If we already have a gameChainId and it's different from current chainId,
           // warn the user and don't fetch from wrong chain
           if (gameChainId !== null && gameChainId !== chainId) {
-            console.warn(`Network mismatch! Game was created on chain ${gameChainId} but you're on chain ${chainId}`);
-            setError(`Please switch back to the original network (Chain ID: ${gameChainId}) to continue this game.`);
+            console.warn(
+              `Network mismatch! Game was created on chain ${gameChainId} but you're on chain ${chainId}`,
+            );
+            setError(
+              `Please switch back to the original network (Chain ID: ${gameChainId}) to continue this game.`,
+            );
             toast({
               title: "Network Mismatch",
               description: `This game was created on a different network. Please switch back to continue.`,
@@ -206,14 +220,19 @@ const Room = () => {
             });
             return;
           }
-          
+
           // Reset contract state when chainId changes to prevent stale data
           setContract(null);
           setOffChainGameState(null);
-          
-          console.log('Setting up contract with chainId:', chainId, 'account:', userAccount);
+
+          console.log(
+            "Setting up contract with chainId:",
+            chainId,
+            "account:",
+            userAccount,
+          );
           const contractResult = await getContractNew(chainId);
-          console.log('Contract result:', contractResult);
+          console.log("Contract result:", contractResult);
 
           if (!contractResult.contract) {
             console.error("Failed to initialize contract");
@@ -221,17 +240,22 @@ const Room = () => {
             return;
           }
 
-          console.log('Contract initialized for chain:', chainId, 'at address:', contractResult.contract.target);
+          console.log(
+            "Contract initialized for chain:",
+            chainId,
+            "at address:",
+            contractResult.contract.target,
+          );
           setContract(contractResult.contract);
 
           if (contractResult.contract && id) {
             const bigIntId = BigInt(id as string);
             // console.log('Setting game ID:', bigIntId.toString());
             setGameId(bigIntId);
-            
+
             // Store the chain ID this game belongs to (only set once)
             if (gameChainId === null) {
-              console.log('Setting game chain ID to:', chainId);
+              console.log("Setting game chain ID to:", chainId);
               setGameChainId(chainId);
             }
 
@@ -514,17 +538,27 @@ const Room = () => {
   const hasGeneratedStartProofs = useRef(false);
   useEffect(() => {
     // Only trigger when all conditions are met and we haven't already generated
-    if (!gameStarted || !zkEnabled || !zkContext.isReady || hasGeneratedStartProofs.current) return;
+    if (
+      !gameStarted ||
+      !zkEnabled ||
+      !zkContext.isReady ||
+      hasGeneratedStartProofs.current
+    )
+      return;
     if (!offChainGameState || !id) return;
 
     hasGeneratedStartProofs.current = true;
     const effectiveGameId = String(id);
-    console.log('[ZK] All conditions met - generating shuffle and deal proofs for game:', effectiveGameId);
+    console.log(
+      "[ZK] All conditions met - generating shuffle and deal proofs for game:",
+      effectiveGameId,
+    );
 
     // 1. Generate shuffle proof first, then deal proof
-    zkIntegration.generateShuffleProof(effectiveGameId)
+    zkIntegration
+      .generateShuffleProof(effectiveGameId)
       .then((shuffleResult: any) => {
-        console.log('[ZK] Shuffle proof result:', shuffleResult);
+        console.log("[ZK] Shuffle proof result:", shuffleResult);
 
         // 2. After shuffle proof, generate deal proof for player's hand
         if (account && offChainGameState.playerHands?.[account]) {
@@ -535,21 +569,28 @@ const Room = () => {
           return zkIntegration.generateDealProof(
             effectiveGameId,
             playerCards,
-            playerId
+            playerId,
           );
         }
       })
       .then((dealResult: any) => {
         if (dealResult) {
-          console.log('[ZK] Deal proof result:', dealResult);
+          console.log("[ZK] Deal proof result:", dealResult);
         }
       })
       .catch((err: any) => {
-        console.warn('[ZK] Shuffle/deal proof generation error:', err);
+        console.warn("[ZK] Shuffle/deal proof generation error:", err);
         // Allow retry on next render if it failed
         hasGeneratedStartProofs.current = false;
       });
-  }, [gameStarted, zkEnabled, zkContext.isReady, offChainGameState, id, account]);
+  }, [
+    gameStarted,
+    zkEnabled,
+    zkContext.isReady,
+    offChainGameState,
+    id,
+    account,
+  ]);
 
   const fetchGameState = async (
     contract: UnoGameContract,
@@ -557,7 +598,7 @@ const Room = () => {
     account: string,
   ) => {
     try {
-      console.log('Fetching game state for game ID:', gameId.toString());
+      console.log("Fetching game state for game ID:", gameId.toString());
       // console.log('Using contract:', contract);
 
       if (!contract || !contract.getGame) {
@@ -566,7 +607,7 @@ const Room = () => {
 
       // Call the getGame method on the ethers.js contract
       const gameData = await contract.getGame(gameId);
-      console.log('Raw game data:', gameData);
+      console.log("Raw game data:", gameData);
 
       if (!gameData) {
         throw new Error("No game data returned from contract");
@@ -645,8 +686,15 @@ const Room = () => {
 
   const handleStartGame = async () => {
     const userAccount = account || address;
-    console.log('Starting game with:', { address, account, userAccount, offChainGameState: !!offChainGameState, gameId, isWalletConnected });
-    
+    console.log("Starting game with:", {
+      address,
+      account,
+      userAccount,
+      offChainGameState: !!offChainGameState,
+      gameId,
+      isWalletConnected,
+    });
+
     // Check for wallet connection first
     if (!isWalletConnected && !isMiniPayWallet) {
       console.error("Wallet not connected");
@@ -659,9 +707,14 @@ const Room = () => {
       });
       return;
     }
-    
+
     if (!address || !userAccount || !offChainGameState || !gameId) {
-      console.error("Missing required data to start game", { address, userAccount, offChainGameState: !!offChainGameState, gameId });
+      console.error("Missing required data to start game", {
+        address,
+        userAccount,
+        offChainGameState: !!offChainGameState,
+        gameId,
+      });
       setError("Missing required data to start game. Please refresh the page.");
       return;
     }
@@ -776,13 +829,13 @@ const Room = () => {
   };
 
   const initializeGameAfterStart = () => {
-    console.log('Initializing game after start');
+    console.log("Initializing game after start");
     if (!offChainGameState || !bytesAddress) return;
 
     try {
-      console.log('Off chain game state:', offChainGameState);
+      console.log("Off chain game state:", offChainGameState);
       const newState = startGame(offChainGameState, socket);
-      console.log('New state:', newState);
+      console.log("New state:", newState);
 
       const action: Action = { type: "startGame", player: bytesAddress! };
       hashAction(action);
@@ -863,7 +916,9 @@ const Room = () => {
               currentUser={currentUser}
               isComputerMode={isComputerMode}
               playerCount={users.length}
-              onZKStateChange={zkEnabled ? zkIntegration.onGameStateChange : undefined}
+              onZKStateChange={
+                zkEnabled ? zkIntegration.onGameStateChange : undefined
+              }
               zkReady={zkIntegration.isReady}
             />
           ) : (
@@ -1233,7 +1288,9 @@ const Room = () => {
           currentUser={currentUser}
           isComputerMode={false}
           playerCount={users.length}
-          onZKStateChange={zkEnabled ? zkIntegration.onGameStateChange : undefined}
+          onZKStateChange={
+            zkEnabled ? zkIntegration.onGameStateChange : undefined
+          }
           zkReady={zkIntegration.isReady}
         />
       )}

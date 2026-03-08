@@ -61,7 +61,7 @@ export default function ProfileDropdown({ address }: ProfileDropdownProps) {
         className="w-10 h-10 rounded-lg overflow-hidden hover:ring-2 hover:ring-white/20 transition-all duration-200"
       >
         <img 
-          src={`https://api.dicebear.com/9.x/pixel-art/svg?seed=${address}`} 
+          src={`/api/avatar?seed=${address}`} 
           alt="Profile"
           className="w-full h-full object-cover"
         />
@@ -74,7 +74,7 @@ export default function ProfileDropdown({ address }: ProfileDropdownProps) {
           <div className="p-4 border-b border-gray-700">
             <div className="flex items-center space-x-3">
               <img 
-                src={`https://api.dicebear.com/9.x/pixel-art/svg?seed=${address}`} 
+                src={`/api/avatar?seed=${address}`} 
                 alt="Profile"
                 className="w-12 h-12 rounded-lg"
               />

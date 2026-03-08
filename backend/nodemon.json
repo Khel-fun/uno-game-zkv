@@ -1,0 +1,17 @@
+{
+  "ignore": [
+    "game-states.json",
+    "game-codes.json",
+    "node_modules/*",
+    "*.log"
+  ],
+  "watch": [
+    "*.js",
+    "config/**/*.js",
+    "routes/**/*.js",
+    "services/**/*.js",
+    "socket/**/*.js",
+    "utils/**/*.js",
+    "zk/**/*.js"
+  ]
+}
