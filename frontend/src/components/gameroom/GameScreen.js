@@ -359,7 +359,7 @@ const GameScreen = ({
                   }}
                 >
                   <img
-                    src={`https://api.dicebear.com/9.x/micah/svg?seed=${opponent.name}`}
+                    src={`/api/avatar?seed=${opponent.name}`}
                     alt={`${opponent.displayName} Avatar`}
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   />
@@ -533,7 +533,7 @@ const GameScreen = ({
                   }}
                 >
                 <img
-                  src="https://api.dicebear.com/9.x/micah/svg?seed=gameboyy"
+                  src="/api/avatar?seed=gameboyy"
                   alt="Player Avatar"
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />
