@@ -3,8 +3,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import { useAccount, useConnect, useSwitchChain } from "wagmi";
-import { isMiniPay } from "@/utils/miniPayUtils";
-import { celoSepolia as celoSepoliaNetwork } from "@/config/networks";
+// import { isMiniPay } from "@/utils/miniPayUtils";
+// import { celoSepolia as celoSepoliaNetwork } from "@/config/networks";
 
 interface WalletConnectionProps {
   onConnect?: (publicKey: string | null) => void;
@@ -18,57 +18,57 @@ export function WalletConnection({ onConnect }: WalletConnectionProps) {
   const { switchChain } = useSwitchChain();
   const { connect, connectors } = useConnect();
 
-  // MiniPay auto-connect on mount
-  useEffect(() => {
-    const initMiniPay = async () => {
-      if (typeof window !== "undefined" && isMiniPay()) {
-        setHideMiniPayConnectBtn(true);
+  // // MiniPay auto-connect on mount
+  // useEffect(() => {
+  //   const initMiniPay = async () => {
+  //     if (typeof window !== "undefined" && isMiniPay()) {
+  //       setHideMiniPayConnectBtn(true);
 
-        try {
-          await window.ethereum!.request({
-            method: "eth_requestAccounts",
-            params: [],
-          });
-        } catch (error) {
-          console.error("[MiniPay] Failed to request accounts:", error);
-          return;
-        }
+  //       try {
+  //         await window.ethereum!.request({
+  //           method: "eth_requestAccounts",
+  //           params: [],
+  //         });
+  //       } catch (error) {
+  //         console.error("[MiniPay] Failed to request accounts:", error);
+  //         return;
+  //       }
 
-        const injectedConnector = connectors.find(
-          (connector) => connector.id === "injected",
-        );
+  //       const injectedConnector = connectors.find(
+  //         (connector) => connector.id === "injected",
+  //       );
 
-        if (!injectedConnector) {
-          console.error("[MiniPay] Injected connector not found");
-          return;
-        }
+  //       if (!injectedConnector) {
+  //         console.error("[MiniPay] Injected connector not found");
+  //         return;
+  //       }
 
-        if (!isConnected) {
-          try {
-            await connect({ connector: injectedConnector });
-          } catch (error) {
-            console.error("[MiniPay] Connection failed:", error);
-          }
-        }
-      }
-    };
+  //       if (!isConnected) {
+  //         try {
+  //           await connect({ connector: injectedConnector });
+  //         } catch (error) {
+  //           console.error("[MiniPay] Connection failed:", error);
+  //         }
+  //       }
+  //     }
+  //   };
 
-    initMiniPay();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  //   initMiniPay();
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, []);
 
-  // Switch to Celo Sepolia for MiniPay
-  useEffect(() => {
-    if (isMiniPay() && isConnected && switchChain) {
-      switchChain({ chainId: celoSepoliaNetwork.id });
-      if (typeof window !== "undefined") {
-        localStorage.setItem(
-          "zunno_selected_network",
-          celoSepoliaNetwork.id.toString(),
-        );
-      }
-    }
-  }, [isConnected, switchChain]);
+  // // Switch to Celo Sepolia for MiniPay
+  // useEffect(() => {
+  //   if (isMiniPay() && isConnected && switchChain) {
+  //     switchChain({ chainId: celoSepoliaNetwork.id });
+  //     if (typeof window !== "undefined") {
+  //       localStorage.setItem(
+  //         "zunno_selected_network",
+  //         celoSepoliaNetwork.id.toString(),
+  //       );
+  //     }
+  //   }
+  // }, [isConnected, switchChain]);
 
   // Notify parent when address changes
   useEffect(() => {
