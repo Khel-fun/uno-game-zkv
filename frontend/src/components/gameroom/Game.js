@@ -888,7 +888,7 @@ const Game = ({
     if (isConfirmed && !isMiniPayWallet) {
       toast({
         title: "Game Ended on Blockchain",
-        description: `Game recorded successfully on ${selectedNetwork.displayName}.`,
+        description: `Game recorded successfully on Base Sepolia.`,
         variant: "success",
         duration: 5000,
       });
