@@ -1,10 +1,11 @@
-const connectionHandler = require('./connection');
-const lobbyHandler = require('./lobby');
-const gameHandler = require('./game');
-const reconnectionHandler = require('./reconnection');
+const connectionHandler = require("./connection");
+const lobbyHandler = require("./lobby");
+const gameHandler = require("./game");
+const reconnectionHandler = require("./reconnection");
 
 function registerSocketHandlers(io, { gameStateManager, userManager }) {
-  io.on('connection', (socket) => {
+  io.on("connection", (socket) => {
+    console.log("New connection:", socket.id);
     connectionHandler(io, socket, { userManager });
     lobbyHandler(io, socket, { userManager });
     gameHandler(io, socket, { gameStateManager, userManager });
