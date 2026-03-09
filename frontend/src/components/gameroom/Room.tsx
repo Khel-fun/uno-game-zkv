@@ -538,6 +538,8 @@ const Room = () => {
   const hasGeneratedStartProofs = useRef(false);
   useEffect(() => {
     // Only trigger when all conditions are met and we haven't already generated
+    console.log('[ZK] useEffect guards:', { gameStarted, zkEnabled, isReady: zkContext.isReady, alreadyGenerated: hasGeneratedStartProofs.current });
+    
     if (
       !gameStarted ||
       !zkEnabled ||
