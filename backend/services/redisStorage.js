@@ -9,10 +9,15 @@ class RedisStorage {
     this.enabled = getRedisEnabled();
     if (this.enabled) {
       this.client = createRedisClient('data');
-      this.client.connect().catch((err) => {
-        logger.error('Redis connect error, disabling Redis: %s', err.message);
-        this.enabled = false;
-      });
+      // ioredis may auto-connect when REDIS_URL is provided (ignoring lazyConnect).
+      // Only call .connect() if the client is in 'wait' state (truly lazy).
+      // If it's already connecting/connected, that's fine — not an error.
+      if (this.client.status === 'wait') {
+        this.client.connect().catch((err) => {
+          logger.error('Redis connect error, disabling Redis: %s', err.message);
+          this.enabled = false;
+        });
+      }
     }
   }
 

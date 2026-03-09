@@ -482,9 +482,12 @@ function getZKGameState(gameId) {
  * Returns null if state does not exist anywhere (does NOT auto-create).
  */
 async function loadZKGameState(gameId) {
+  console.log(`[ZK] loadZKGameState called with gameId="${gameId}" (type: ${typeof gameId}), Map keys: [${Array.from(zkGameStates.keys()).join(', ')}], redis enabled: ${redisStorage.isEnabled()}`);
+
   // 1. Try in-memory cache
   const cached = zkGameStates.get(gameId);
   if (cached && cached.cards && cached.cards.size > 0) {
+    console.log(`[ZK] Found in-memory state for game ${gameId} (${cached.cards.size} cards)`);
     return cached;
   }
 
@@ -497,12 +500,15 @@ async function loadZKGameState(gameId) {
         zkGameStates.set(gameId, restored);
         console.log(`[ZK] Restored state for game ${gameId} from Redis (${restored.cards.size} cards)`);
         return restored;
+      } else {
+        console.log(`[ZK] No state found in Redis for game ${gameId}`);
       }
     } catch (err) {
       console.error(`[ZK] Failed to load state from Redis for game ${gameId}:`, err.message);
     }
   }
 
+  console.log(`[ZK] No state found anywhere for game ${gameId}`);
   return null;
 }
 
@@ -521,9 +527,11 @@ function persistZKState(gameId, zkState) {
  * Initialize ZK state for a new game.
  */
 async function initializeZKGame(gameId, shuffledDeck) {
+  console.log(`[ZK] initializeZKGame called with gameId="${gameId}" (type: ${typeof gameId}), deck size: ${shuffledDeck?.length}`);
   const zkState = new ZKGameState(gameId);
   const result = await zkState.initializeDeck(shuffledDeck);
   zkGameStates.set(gameId, zkState);
+  console.log(`[ZK] State stored in Map under key "${gameId}", Map keys now: [${Array.from(zkGameStates.keys()).join(', ')}]`);
   persistZKState(gameId, zkState);
   return {
     ...result,
