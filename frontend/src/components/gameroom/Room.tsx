@@ -180,7 +180,7 @@ const Room = () => {
       if (isConnected && !hasJoinedRoom.current) {
         // Get wallet address from wagmi hook or localStorage
         const walletAddress = address || null;
-        // console.log('Joining room with wallet address:', walletAddress);
+        console.log('Joining room with wallet address:', walletAddress);
 
         socket.emit(
           "join",
@@ -312,7 +312,7 @@ const Room = () => {
 
     const roomId = `game-${id}`;
 
-    // console.log(`Joining room: ${roomId}`);
+    console.log(`Joining room: ${roomId}`);
 
     // Only join room if connected
     if (isConnected) {
@@ -512,10 +512,10 @@ const Room = () => {
 
   useEffect(() => {
     const handleRoomData = ({ users }: { users: User[] }) => {
-      // console.log('Received roomData event with users:', users);
+      console.log('Received roomData event with users:', users);
       // Filter only connected users
       const connectedUsers = users.filter((u) => u.connected !== false);
-      // console.log('Connected users:', connectedUsers);
+      console.log('Connected users:', connectedUsers);
       setUsers(connectedUsers);
     };
 
