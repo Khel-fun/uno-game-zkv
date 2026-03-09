@@ -93,21 +93,34 @@ module.exports = function gameHandler(io, socket, { gameStateManager, userManage
   }
 
   // Game started: save state and broadcast WITH ZK initialization
-  socket.on('gameStarted', async ({ roomId, newState, cardHashMap }) => {
+  socket.on('gameStarted', async ({ roomId, newState, cardHashMap, shuffledDeck }) => {
     try {
       // Normalize game ID for consistent storage/retrieval
       const rawGameId = newState?.id || newState?.gameId || roomId;
       const gameId = normalizeGameId(rawGameId);
       let zkData = null;
       
-      logger.info('[ZK] gameStarted: roomId=%s, rawGameId=%s, normalizedGameId=%s, cardHashMap keys=%d', 
-        roomId, rawGameId, gameId, cardHashMap ? Object.keys(cardHashMap).length : 0);
+      logger.info('[ZK] gameStarted: roomId=%s, rawGameId=%s, normalizedGameId=%s, cardHashMap keys=%d, shuffledDeck=%d', 
+        roomId, rawGameId, gameId, cardHashMap ? Object.keys(cardHashMap).length : 0, shuffledDeck ? shuffledDeck.length : 0);
       
-      // Convert card hashes to card strings using cardHashMap
-      // The game may use card hashes in playerHands and other places
-      if (cardHashMap && Object.keys(cardHashMap).length > 0) {
+      // Prefer the full shuffledDeck (108 card strings including duplicates)
+      // over cardHashMap (which only has ~54 entries due to hash collisions on
+      // duplicate cards). The ZK circuits expect 108 cards.
+      if (Array.isArray(shuffledDeck) && shuffledDeck.length > 0) {
         try {
-          // Build deck from cardHashMap - this contains all cards in the game
+          const validCards = shuffledDeck.filter(c => typeof c === 'string' && c.length > 0);
+          logger.info('[ZK] Using full shuffledDeck with %d cards for ZK init: %s...', validCards.length, validCards.slice(0, 5).join(', '));
+          
+          if (validCards.length > 0) {
+            zkData = await initializeZKGame(gameId, validCards);
+            logger.info('[ZK] State initialized for game %s with %d cards, merkleRoot=%s', gameId, validCards.length, zkData?.merkleRoot?.slice(0, 20) + '...');
+          }
+        } catch (zkErr) {
+          logger.error('[ZK] Initialization from shuffledDeck failed: %s', zkErr.message);
+        }
+      } else if (cardHashMap && Object.keys(cardHashMap).length > 0) {
+        // Fallback: build deck from cardHashMap (loses duplicates — only ~54 unique cards)
+        try {
           const cardStrings = [];
           for (const [hash, cardInfo] of Object.entries(cardHashMap)) {
             const cardStr = hashMapEntryToCardString(cardInfo);
@@ -116,7 +129,7 @@ module.exports = function gameHandler(io, socket, { gameStateManager, userManage
             }
           }
           
-          logger.info('[ZK] Converted %d card hashes to card strings: %s', cardStrings.length, cardStrings.slice(0, 5).join(', ') + '...');
+          logger.info('[ZK] Fallback: Converted %d card hashes to card strings: %s', cardStrings.length, cardStrings.slice(0, 5).join(', ') + '...');
           
           if (cardStrings.length > 0) {
             zkData = await initializeZKGame(gameId, cardStrings);
@@ -126,7 +139,7 @@ module.exports = function gameHandler(io, socket, { gameStateManager, userManage
           logger.error('[ZK] Initialization failed: %s', zkErr.message);
         }
       } else {
-        logger.warn('[ZK] No cardHashMap provided for game %s - ZK initialization skipped', gameId);
+        logger.warn('[ZK] No cardHashMap or shuffledDeck provided for game %s - ZK initialization skipped', gameId);
       }
       
       await gameStateManager.saveGameState(roomId, newState);

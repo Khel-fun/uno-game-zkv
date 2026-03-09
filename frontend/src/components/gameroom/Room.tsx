@@ -538,8 +538,6 @@ const Room = () => {
   const hasGeneratedStartProofs = useRef(false);
   useEffect(() => {
     // Only trigger when all conditions are met and we haven't already generated
-    console.log('[ZK] useEffect guards:', { gameStarted, zkEnabled, isReady: zkContext.isReady, alreadyGenerated: hasGeneratedStartProofs.current });
-    
     if (
       !gameStarted ||
       !zkEnabled ||
@@ -835,8 +833,21 @@ const Room = () => {
     if (!offChainGameState || !bytesAddress) return;
 
     try {
-      console.log("Off chain game state:", offChainGameState);
-      const newState = startGame(offChainGameState, socket);
+      // Ensure all connected players are in the game state before dealing.
+      // The on-chain players array may be stale (fetched before all players
+      // joined on-chain), so we merge in wallet addresses from socket users.
+      const stateForStart = { ...offChainGameState };
+      const socketWallets = users
+        .map((u) => u.walletAddress)
+        .filter((w): w is string => !!w);
+      if (socketWallets.length > stateForStart.players.length) {
+        const playerSet = new Set(stateForStart.players);
+        socketWallets.forEach((w) => playerSet.add(w));
+        stateForStart.players = Array.from(playerSet);
+      }
+
+      console.log("Off chain game state:", stateForStart);
+      const newState = startGame(stateForStart, socket);
       console.log("New state:", newState);
 
       const action: Action = { type: "startGame", player: bytesAddress! };

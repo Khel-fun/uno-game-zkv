@@ -27,6 +27,28 @@ export function canPlay(handHashes: string[], currentColor: CardColor, currentVa
   });
 }
 
+/**
+ * Convert a Card object to the string format used by the backend ZK module.
+ * Must match the format expected by parseCardCode in cardUids.ts:
+ *   Number: '5R', '0G'  |  Skip: 'skipR'  |  Reverse: '_R'
+ *   Draw2: 'D2R'  |  Wild: 'W'  |  WildDraw4: 'D4W'
+ */
+export function cardToString(card: Card): string {
+  const colorMap: Record<string, string> = { red: 'R', green: 'G', blue: 'B', yellow: 'Y' };
+
+  if (card.color === 'wild') {
+    return card.value === 'wild_draw4' ? 'D4W' : 'W';
+  }
+
+  const c = colorMap[card.color] || '';
+  switch (card.value) {
+    case 'skip': return `skip${c}`;
+    case 'reverse': return `_${c}`;
+    case 'draw2': return `D2${c}`;
+    default: return `${card.value}${c}`;
+  }
+}
+
 export function createDeck(): Card[] {
   let deck: Card[] = [];
   COLORS.forEach(color => {
@@ -107,8 +129,13 @@ export function convertBigIntsToStrings(obj: any): any {
 export function startGame(state: OffChainGameState, socket?: any): OffChainGameState {
   const newState = { ...state };
   deck = shuffleDeck(createDeck(), Number(state.id));
-  // console.log(deck)
-  // console.log(deck.length)
+
+  // Capture full shuffled deck as card strings (108 cards) BEFORE dealing.
+  // This is sent to the backend so ZK state is initialized with the complete
+  // deck including duplicate cards (cardHashMap only has ~54 unique entries).
+  const fullShuffledDeck = deck.map(cardToString);
+  console.log(`[Game] Full shuffled deck: ${fullShuffledDeck.length} cards (expected 108)`);
+
   let tempCardHashMap: Map<string, Card> = new Map();
   tempCardHashMap.clear()
 
@@ -160,13 +187,15 @@ export function startGame(state: OffChainGameState, socket?: any): OffChainGameS
     socket.emit('gameStarted', {
       newState: convertBigIntsToStrings(newState),
       cardHashMap: cardHashMapObject,
+      shuffledDeck: fullShuffledDeck,
       roomId: roomId
     });
 
     // Also emit the event with the room-specific name to ensure all listeners receive it
     socket.emit(`gameStarted-${roomId}`, {
       newState: convertBigIntsToStrings(newState),
-      cardHashMap: cardHashMapObject
+      cardHashMap: cardHashMapObject,
+      shuffledDeck: fullShuffledDeck,
     });
 
     // console.log(`Emitted gameStarted-${roomId} event with:`, {

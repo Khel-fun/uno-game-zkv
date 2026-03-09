@@ -342,24 +342,25 @@ export function useZKGameIntegration(options: UseZKGameIntegrationOptions = {}) 
       
       if (verifyResult.valid) {
         notifyZK('success', 'play', `Proof verified locally`);
-        
-        // Submit to zkVerify in the background (don't await - don't block gameplay)
-        verificationService.submitToZkVerify('play', proof)
-          .then(result => {
-            if (result.submitted) {
-              notifyZK('success', 'play', `Submitted to zkVerify (job: ${result.jobId})`);
-              console.log('[ZK] zkVerify job ID:', result.jobId);
-            } else if (result.error) {
-              console.warn('[ZK] zkVerify submission skipped:', result.error);
-            }
-          })
-          .catch(err => {
-            console.warn('[ZK] zkVerify submission failed:', err);
-          });
       } else {
-        notifyZK('error', 'play', `Local verification failed: ${verifyResult.error}`);
-        console.warn('[ZK] Play proof local verification failed but proof was still tracked for UI');
+        console.warn('[ZK] Play proof local verification failed:', verifyResult.error);
       }
+
+      // Always submit to zkVerify regardless of local verification result.
+      // Local WASM verification is unreliable in multi-tab scenarios; zkVerify
+      // is the authoritative verifier.
+      verificationService.submitToZkVerify('play', proof)
+        .then(result => {
+          if (result.submitted) {
+            notifyZK('success', 'play', `Submitted to zkVerify (job: ${result.jobId})`);
+            console.log('[ZK] zkVerify job ID:', result.jobId);
+          } else if (result.error) {
+            console.warn('[ZK] zkVerify submission skipped:', result.error);
+          }
+        })
+        .catch(err => {
+          console.warn('[ZK] zkVerify submission failed:', err);
+        });
       
       const totalDuration = performance.now() - startTime;
       
@@ -505,24 +506,23 @@ export function useZKGameIntegration(options: UseZKGameIntegrationOptions = {}) 
       
       if (verifyResult.valid) {
         notifyZK('success', 'draw', `Proof verified locally`);
-        
-        // Submit to zkVerify in the background (don't await - don't block gameplay)
-        verificationService.submitToZkVerify('draw', proof)
-          .then(result => {
-            if (result.submitted) {
-              notifyZK('success', 'draw', `Submitted to zkVerify (job: ${result.jobId})`);
-              console.log('[ZK] zkVerify job ID:', result.jobId);
-            } else if (result.error) {
-              console.warn('[ZK] zkVerify submission skipped:', result.error);
-            }
-          })
-          .catch(err => {
-            console.warn('[ZK] zkVerify submission failed:', err);
-          });
       } else {
-        notifyZK('error', 'draw', `Local verification failed: ${verifyResult.error}`);
-        console.warn('[ZK] Draw proof local verification failed but proof was still tracked for UI');
+        console.warn('[ZK] Draw proof local verification failed:', verifyResult.error);
       }
+
+      // Always submit to zkVerify regardless of local verification result
+      verificationService.submitToZkVerify('draw', proof)
+        .then(result => {
+          if (result.submitted) {
+            notifyZK('success', 'draw', `Submitted to zkVerify (job: ${result.jobId})`);
+            console.log('[ZK] zkVerify job ID:', result.jobId);
+          } else if (result.error) {
+            console.warn('[ZK] zkVerify submission skipped:', result.error);
+          }
+        })
+        .catch(err => {
+          console.warn('[ZK] zkVerify submission failed:', err);
+        });
       
       const totalDuration = performance.now() - startTime;
       
@@ -575,21 +575,36 @@ export function useZKGameIntegration(options: UseZKGameIntegrationOptions = {}) 
       
       notifyZK('generating', 'shuffle', 'Requesting shuffle proof data...');
       
-      // Request proof data from backend
-      const proofData = await new Promise<BackendShuffleProofData>((resolve, reject) => {
-        const timeout = setTimeout(() => reject(new Error('Timeout requesting shuffle proof data')), 15000);
-        
-        socketRef.current!.emit('requestShuffleProofData', { gameId });
-        
-        socketRef.current!.once('shuffleProofData', (data: BackendShuffleProofData) => {
-          clearTimeout(timeout);
-          if (data.error) {
-            reject(new Error(data.error));
-          } else {
+      // Request proof data from backend with retry logic.
+      // The game starter's frontend may request proof data before the backend
+      // has finished initializing ZK state (async Pedersen hashing), so we
+      // retry up to 5 times with increasing delays.
+      const MAX_RETRIES = 5;
+      let proofData: BackendShuffleProofData | null = null;
+      for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        proofData = await new Promise<BackendShuffleProofData>((resolve, reject) => {
+          const timeout = setTimeout(() => reject(new Error('Timeout requesting shuffle proof data')), 15000);
+          
+          socketRef.current!.emit('requestShuffleProofData', { gameId });
+          
+          socketRef.current!.once('shuffleProofData', (data: BackendShuffleProofData) => {
+            clearTimeout(timeout);
             resolve(data);
-          }
+          });
         });
-      });
+        
+        if (proofData.error && proofData.error.includes('ZK state not found') && attempt < MAX_RETRIES) {
+          const delay = 1000 * (attempt + 1);
+          console.log(`[ZK] Shuffle: ZK state not ready yet, retrying in ${delay}ms (attempt ${attempt + 1}/${MAX_RETRIES})...`);
+          await new Promise(r => setTimeout(r, delay));
+          continue;
+        }
+        
+        if (proofData.error) {
+          throw new Error(proofData.error);
+        }
+        break;
+      }
       
       notifyZK('generating', 'shuffle', 'Generating shuffle ZK proof...');
       
@@ -624,19 +639,19 @@ export function useZKGameIntegration(options: UseZKGameIntegrationOptions = {}) 
       
       if (verifyResult.valid) {
         notifyZK('success', 'shuffle', 'Proof verified locally');
-        
-        // Submit to zkVerify in background
-        verificationService.submitToZkVerify('shuffle', proof)
-          .then(result => {
-            if (result.submitted) {
-              notifyZK('success', 'shuffle', `Submitted to zkVerify (job: ${result.jobId})`);
-              console.log('[ZK] Shuffle zkVerify job ID:', result.jobId);
-            }
-          })
-          .catch(err => console.warn('[ZK] Shuffle zkVerify submission failed:', err));
       } else {
-        notifyZK('error', 'shuffle', `Local verification failed: ${verifyResult.error}`);
+        console.warn('[ZK] Shuffle proof local verification failed:', verifyResult.error);
       }
+
+      // Always submit to zkVerify regardless of local verification result
+      verificationService.submitToZkVerify('shuffle', proof)
+        .then(result => {
+          if (result.submitted) {
+            notifyZK('success', 'shuffle', `Submitted to zkVerify (job: ${result.jobId})`);
+            console.log('[ZK] Shuffle zkVerify job ID:', result.jobId);
+          }
+        })
+        .catch(err => console.warn('[ZK] Shuffle zkVerify submission failed:', err));
       
       setStats(prev => ({
         ...prev,
@@ -686,25 +701,39 @@ export function useZKGameIntegration(options: UseZKGameIntegrationOptions = {}) 
       
       notifyZK('generating', 'deal', 'Requesting deal proof data...');
       
-      // Request proof data from backend
-      const proofData = await new Promise<BackendDealProofData>((resolve, reject) => {
-        const timeout = setTimeout(() => reject(new Error('Timeout requesting deal proof data')), 15000);
-        
-        socketRef.current!.emit('requestDealProofData', {
-          gameId,
-          playerCards,
-          playerId,
-        });
-        
-        socketRef.current!.once('dealProofData', (data: BackendDealProofData) => {
-          clearTimeout(timeout);
-          if (data.error) {
-            reject(new Error(data.error));
-          } else {
+      // Request proof data from backend with retry logic.
+      // The game starter's frontend may request proof data before the backend
+      // has finished initializing ZK state, so we retry with increasing delays.
+      const MAX_RETRIES = 5;
+      let proofData: BackendDealProofData | null = null;
+      for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        proofData = await new Promise<BackendDealProofData>((resolve, reject) => {
+          const timeout = setTimeout(() => reject(new Error('Timeout requesting deal proof data')), 15000);
+          
+          socketRef.current!.emit('requestDealProofData', {
+            gameId,
+            playerCards,
+            playerId,
+          });
+          
+          socketRef.current!.once('dealProofData', (data: BackendDealProofData) => {
+            clearTimeout(timeout);
             resolve(data);
-          }
+          });
         });
-      });
+        
+        if (proofData.error && proofData.error.includes('ZK state not found') && attempt < MAX_RETRIES) {
+          const delay = 1000 * (attempt + 1);
+          console.log(`[ZK] Deal: ZK state not ready yet, retrying in ${delay}ms (attempt ${attempt + 1}/${MAX_RETRIES})...`);
+          await new Promise(r => setTimeout(r, delay));
+          continue;
+        }
+        
+        if (proofData.error) {
+          throw new Error(proofData.error);
+        }
+        break;
+      }
       
       notifyZK('generating', 'deal', 'Generating deal ZK proof...');
       
@@ -753,19 +782,19 @@ export function useZKGameIntegration(options: UseZKGameIntegrationOptions = {}) 
       
       if (verifyResult.valid) {
         notifyZK('success', 'deal', 'Proof verified locally');
-        
-        // Submit to zkVerify in background
-        verificationService.submitToZkVerify('deal', proof)
-          .then(result => {
-            if (result.submitted) {
-              notifyZK('success', 'deal', `Submitted to zkVerify (job: ${result.jobId})`);
-              console.log('[ZK] Deal zkVerify job ID:', result.jobId);
-            }
-          })
-          .catch(err => console.warn('[ZK] Deal zkVerify submission failed:', err));
       } else {
-        notifyZK('error', 'deal', `Local verification failed: ${verifyResult.error}`);
+        console.warn('[ZK] Deal proof local verification failed:', verifyResult.error);
       }
+
+      // Always submit to zkVerify regardless of local verification result
+      verificationService.submitToZkVerify('deal', proof)
+        .then(result => {
+          if (result.submitted) {
+            notifyZK('success', 'deal', `Submitted to zkVerify (job: ${result.jobId})`);
+            console.log('[ZK] Deal zkVerify job ID:', result.jobId);
+          }
+        })
+        .catch(err => console.warn('[ZK] Deal zkVerify submission failed:', err));
       
       setStats(prev => ({
         ...prev,
