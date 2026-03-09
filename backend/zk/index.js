@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ZK Crypto Module for UNO Game
  * 
  * Uses @aztec/bb.js Barretenberg Pedersen hashing to match
@@ -19,6 +19,8 @@
  */
 
 const crypto = require('crypto');
+const RedisStorage = require('../services/redisStorage');
+const redisStorage = new RedisStorage();
 
 //  Constants (must match circuits/lib/src/constants.nr) 
 
@@ -476,12 +478,53 @@ function getZKGameState(gameId) {
 }
 
 /**
+ * Load ZK game state: tries in-memory Map first, then Redis on cache miss.
+ * Returns null if state does not exist anywhere (does NOT auto-create).
+ */
+async function loadZKGameState(gameId) {
+  // 1. Try in-memory cache
+  const cached = zkGameStates.get(gameId);
+  if (cached && cached.cards && cached.cards.size > 0) {
+    return cached;
+  }
+
+  // 2. Try Redis
+  if (redisStorage.isEnabled()) {
+    try {
+      const json = await redisStorage.getZKState(gameId);
+      if (json) {
+        const restored = await ZKGameState.fromJSON(json);
+        zkGameStates.set(gameId, restored);
+        console.log(`[ZK] Restored state for game ${gameId} from Redis (${restored.cards.size} cards)`);
+        return restored;
+      }
+    } catch (err) {
+      console.error(`[ZK] Failed to load state from Redis for game ${gameId}:`, err.message);
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Persist the in-memory ZK state to Redis (fire-and-forget).
+ */
+function persistZKState(gameId, zkState) {
+  if (redisStorage.isEnabled()) {
+    redisStorage.saveZKState(gameId, zkState.toJSON()).catch((err) => {
+      console.error(`[ZK] Failed to persist state to Redis for game ${gameId}:`, err.message);
+    });
+  }
+}
+
+/**
  * Initialize ZK state for a new game.
  */
 async function initializeZKGame(gameId, shuffledDeck) {
   const zkState = new ZKGameState(gameId);
   const result = await zkState.initializeDeck(shuffledDeck);
   zkGameStates.set(gameId, zkState);
+  persistZKState(gameId, zkState);
   return {
     ...result,
     zkState: zkState.toJSON(),
@@ -512,7 +555,7 @@ function parsePlayerId(playerId) {
  * Get ZK proof data for playing a card.
  */
 async function getPlayProofData(gameId, playedCard, topCard, playerHand, playerId) {
-  const zkState = zkGameStates.get(gameId);
+  const zkState = await loadZKGameState(gameId);
   if (!zkState) {
     return { error: 'ZK state not found for game' };
   }
@@ -567,7 +610,7 @@ async function getPlayProofData(gameId, playedCard, topCard, playerHand, playerI
  * Get ZK proof data for drawing a card.
  */
 async function getDrawProofData(gameId, drawnCard, deckPosition) {
-  const zkState = zkGameStates.get(gameId);
+  const zkState = await loadZKGameState(gameId);
   if (!zkState) {
     return { error: 'ZK state not found for game' };
   }
@@ -576,6 +619,9 @@ async function getDrawProofData(gameId, drawnCard, deckPosition) {
   if (!consumeData) {
     return { error: 'Failed to consume card' };
   }
+
+  // Persist updated state (card consumed) to Redis
+  persistZKState(gameId, zkState);
 
   return {
     gameId,
@@ -592,7 +638,7 @@ async function getDrawProofData(gameId, drawnCard, deckPosition) {
  * Returns canonical (sorted) UIDs and shuffled UIDs for the shuffle circuit.
  */
 async function getShuffleProofData(gameId) {
-  const zkState = zkGameStates.get(gameId);
+  const zkState = await loadZKGameState(gameId);
   if (!zkState) {
     return { error: 'ZK state not found for game' };
   }
@@ -630,8 +676,8 @@ async function getShuffleProofData(gameId) {
  * Get ZK proof data for a deal action.
  * Proves that specific cards were dealt from the shuffled deck to a player.
  */
-function getDealProofData(gameId, playerCards, playerId) {
-  const zkState = zkGameStates.get(gameId);
+async function getDealProofData(gameId, playerCards, playerId) {
+  const zkState = await loadZKGameState(gameId);
   if (!zkState) {
     return { error: 'ZK state not found for game' };
   }
@@ -695,6 +741,8 @@ module.exports = {
   ZKGameState,
   getZKGameState,
   initializeZKGame,
+  loadZKGameState,
+  persistZKState,
   getPlayProofData,
   getDrawProofData,
   getShuffleProofData,

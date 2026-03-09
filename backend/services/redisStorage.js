@@ -77,6 +77,18 @@ class RedisStorage {
     return this.get(`game:cardhash:${roomId}`);
   }
 
+  async saveZKState(gameId, zkStateJson) {
+    await this.set(`zk:state:${gameId}`, zkStateJson, GAME_STATE_TTL_MS);
+  }
+
+  async getZKState(gameId) {
+    return this.get(`zk:state:${gameId}`);
+  }
+
+  async deleteZKState(gameId) {
+    await this.del(`zk:state:${gameId}`);
+  }
+
   async saveUser(user) {
     const key = `user:${user.id}`;
     await this.set(key, user, 24 * 60 * 60 * 1000); // 24h

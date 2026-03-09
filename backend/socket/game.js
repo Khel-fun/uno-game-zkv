@@ -1,6 +1,6 @@
 const logger = require('../logger');
 const { clearRemoval } = require('./timers');
-const { initializeZKGame, getPlayProofData, getDrawProofData, getShuffleProofData, getDealProofData, getZKGameState } = require('../zk');
+const { initializeZKGame, getPlayProofData, getDrawProofData, getShuffleProofData, getDealProofData, getZKGameState, loadZKGameState } = require('../zk');
 
 module.exports = function gameHandler(io, socket, { gameStateManager, userManager }) {
   // Join a specific game room (socket.io room)
@@ -168,7 +168,8 @@ module.exports = function gameHandler(io, socket, { gameStateManager, userManage
     // If ZK state doesn't exist yet for this game, try to initialize from the update
     try {
       const gid = normalizeGameId(roomId);
-      if (gid && !getZKGameState(gid).cards?.size) {
+      const existingState = await loadZKGameState(gid);
+      if (gid && (!existingState || !existingState.cards?.size)) {
         const allCards = [];
         for (let i = 1; i <= 6; i++) {
           const deck = gameState[`player${i}Deck`];
