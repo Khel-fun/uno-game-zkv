@@ -2,7 +2,6 @@ import { ethers } from 'ethers';
 import { Card, CardColor, CardValue, OffChainGameState, Action } from './types';
 import CryptoJS from 'crypto-js';
 import { updateGlobalCardHashMap, getGlobalCardHashMap, getCardFromGlobalHashMap } from './globalState';
-import { HashedDiscardPile } from './discardPile';
 import { hash } from 'crypto';
 
 

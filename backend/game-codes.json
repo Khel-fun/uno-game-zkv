@@ -458,6 +458,15 @@
         "isPrivate": false,
         "createdAt": 1773095252914
       }
+    ],
+    [
+      "KLQLXXQZ",
+      {
+        "gameId": "73",
+        "roomId": "game-73",
+        "isPrivate": false,
+        "createdAt": 1773163409158
+      }
     ]
   ],
   "gameIdToCode": [
@@ -628,6 +637,10 @@
     [
       "71",
       "N7BPDZL7"
+    ],
+    [
+      "73",
+      "KLQLXXQZ"
     ]
   ]
 }

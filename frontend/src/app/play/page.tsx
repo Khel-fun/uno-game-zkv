@@ -789,13 +789,6 @@ export default function PlayGame() {
         </div>
         <div className="flex items-center space-x-3">
           <AddToFarcaster variant="compact" />
-          {process.env.NEXT_PUBLIC_ENVIRONMENT === "development" && (
-            <Link href="/preview-game">
-              <button className="px-4 py-2 bg-purple-600/30 hover:bg-purple-600/50 text-white rounded-lg text-sm font-medium transition-all duration-200 border border-purple-500/30">
-                Preview Game
-              </button>
-            </Link>
-          )}
 
           {isWalletReady && address && <ProfileDropdown address={address} />}
         </div>

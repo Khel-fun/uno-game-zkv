@@ -6,10 +6,8 @@ import Navbar from "@/components/homepage/Navbar"
 import About from "@/components/homepage/About"
 import Footer from "@/components/homepage/Footer"
 import Feature from "@/components/homepage/Feature"
-import Partner from "@/components/homepage/Partner"
 import Procedure from "@/components/homepage/Procedure"
 import { useMiniKit } from "@/hooks/useMiniKit";
-import BottomNavigation from "@/components/BottomNavigation";
 
 
 export default function Home() {
@@ -30,14 +28,12 @@ export default function Home() {
         <div className="relative">
           <About />
           <Feature />
-          {/* <Partner /> */}
           <Procedure />
         </div>
         <div className="relative">
           <Footer />
         </div>
       </div>
-      {/* <BottomNavigation /> */}
     </main>
   )
 }
