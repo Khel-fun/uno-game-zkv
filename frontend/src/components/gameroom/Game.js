@@ -70,19 +70,44 @@ const isWildCard = (card) => card === "W" || card === "D4W";
 const isSkipCard = (card) => card.startsWith("skip");
 const isReverseCard = (card) => card.startsWith("_");
 const isDraw2Card = (card) => card.startsWith("D2");
-const isValidPlay = (card, currentColor, currentNumber) => {
+
+// Extract color from a card string
+const getColorFromCard = (card, fallbackColor = null) => {
+  if (!card) return fallbackColor;
+  
+  // Handle different card formats
+  if (card.startsWith('skip')) return card.charAt(4); // skipR, skipG, etc.
+  if (card.startsWith('D2')) return card.charAt(2);   // D2R, D2G, etc.
+  if (card.startsWith('_')) return card.charAt(1);    // _R, _G (reverse)
+  if (card === 'W' || card === 'D4W') return fallbackColor; // Wild cards use fallback
+  
+  // Regular number cards: format is like "7G", "3B", "0R"
+  return card.charAt(1);
+};
+
+const isValidPlay = (card, currentColor, currentNumber, playedCardsPile = []) => {
   // Wild cards are always playable
   if (isWildCard(card)) return true;
 
+  // Get the actual color from the last played card on the table
+  const lastPlayedCard = playedCardsPile && playedCardsPile.length > 0 
+    ? playedCardsPile[playedCardsPile.length - 1] 
+    : null;
+  
+  // Use actual card color from the table, fallback to currentColor state for wild cards
+  const actualCurrentColor = lastPlayedCard 
+    ? getColorFromCard(lastPlayedCard, currentColor)
+    : currentColor;
+
   // If game state is not initialized yet, don't allow play
   if (
-    !currentColor ||
-    currentColor === "" ||
+    !actualCurrentColor ||
+    actualCurrentColor === "" ||
     currentNumber === undefined ||
     currentNumber === ""
   ) {
     console.log("[Game] Invalid move: Game state not initialized", {
-      currentColor,
+      actualCurrentColor,
       currentNumber,
     });
     return false;
@@ -91,7 +116,7 @@ const isValidPlay = (card, currentColor, currentNumber) => {
   const { color, number } = parseCard(card);
 
   // Color match or number match
-  const colorMatch = color === currentColor;
+  const colorMatch = color === actualCurrentColor;
   const numberMatch = String(number) === String(currentNumber);
 
   return colorMatch || numberMatch;
@@ -241,7 +266,7 @@ const Game = ({
 
   // Computer AI: find valid moves and pick best one
   const getValidMoves = (deck) =>
-    deck.filter((card) => isValidPlay(card, currentColor, currentNumber));
+    deck.filter((card) => isValidPlay(card, currentColor, currentNumber, playedCardsPile));
 
   const computerMakeMove = () => {
     const validMoves = getValidMoves(player2Deck);
@@ -495,7 +520,7 @@ const Game = ({
         const colorOfPlayedCard = played_card.charAt(4);
         const numberOfPlayedCard = 100;
 
-        if (!isValidPlay(played_card, currentColor, currentNumber)) {
+        if (!isValidPlay(played_card, currentColor, currentNumber, playedCardsPile)) {
           alert(
             "Invalid Move! Skip cards must match either the color or number of the current card.",
           );
@@ -537,7 +562,7 @@ const Game = ({
         const colorOfPlayedCard = played_card.charAt(1);
         const numberOfPlayedCard = 100;
 
-        if (!isValidPlay(played_card, currentColor, currentNumber)) {
+        if (!isValidPlay(played_card, currentColor, currentNumber, playedCardsPile)) {
           alert(
             "Invalid Move! Reverse cards must match either the color or number of the current card.",
           );
@@ -588,7 +613,7 @@ const Game = ({
         const colorOfPlayedCard = played_card.charAt(2);
         const numberOfPlayedCard = 200;
 
-        if (!isValidPlay(played_card, currentColor, currentNumber)) {
+        if (!isValidPlay(played_card, currentColor, currentNumber, playedCardsPile)) {
           alert(
             "Invalid Move! Draw 2 cards must match either the color or number of the current card.",
           );
@@ -636,7 +661,7 @@ const Game = ({
       }
       default: {
         const { color, number } = parseCard(played_card);
-        if (isValidPlay(played_card, currentColor, currentNumber)) {
+        if (isValidPlay(played_card, currentColor, currentNumber, playedCardsPile)) {
           cardPlayedByPlayer({
             cardPlayedBy,
             played_card,
@@ -711,7 +736,7 @@ const Game = ({
     if (!drawCard) return;
 
     const { color, number } = parseCard(drawCard);
-    const isPlayable = isValidPlay(drawCard, currentColor, currentNumber);
+    const isPlayable = isValidPlay(drawCard, currentColor, currentNumber, playedCardsPile);
     const activePlayers = getActivePlayers();
     const turnCopy = isPlayable ? turn : getNextPlayer(turn, activePlayers);
 
@@ -921,6 +946,7 @@ const Game = ({
         currentColor={currentColor}
         currentUser={currentUser}
         totalPlayers={totalPlayers}
+        playedCardsPile={playedCardsPile}
       />
       {!gameOver ? (
         <>
