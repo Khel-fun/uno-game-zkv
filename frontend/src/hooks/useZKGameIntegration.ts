@@ -609,13 +609,13 @@ export function useZKGameIntegration(options: UseZKGameIntegrationOptions = {}) 
       notifyZK('generating', 'shuffle', 'Generating shuffle ZK proof...');
       
       console.log('[ZK] Shuffle proof data received:', {
-        canonicalCount: proofData.canonicalUIDs?.length,
-        shuffledCount: proofData.shuffledUIDs?.length,
+        canonicalCount: proofData?.canonicalUIDs?.length,
+        shuffledCount: proofData?.shuffledUIDs?.length,
       });
       
       // Pad arrays to 108 if needed
-      const uids_in = [...(proofData.canonicalUIDs || [])];
-      const uids_out = [...(proofData.shuffledUIDs || [])];
+      const uids_in = [...(proofData?.canonicalUIDs || [])];
+      const uids_out = [...(proofData?.shuffledUIDs || [])];
       while (uids_in.length < 108) uids_in.push('0');
       while (uids_out.length < 108) uids_out.push('0');
       
@@ -738,16 +738,16 @@ export function useZKGameIntegration(options: UseZKGameIntegrationOptions = {}) 
       notifyZK('generating', 'deal', 'Generating deal ZK proof...');
       
       console.log('[ZK] Deal proof data received:', {
-        playerId: proofData.playerId,
-        cardCount: proofData.cardCount,
-        positions: proofData.positions,
+        playerId: proofData?.playerId,
+        cardCount: proofData?.cardCount,
+        positions: proofData?.positions,
       });
       
       // Deal circuit expects exactly 5 cards
-      const positions = [...(proofData.positions || [])];
-      const cardUIDs = [...(proofData.cardUIDs || [])];
-      const nonces = [...(proofData.nonces || [])];
-      const merklePaths = [...(proofData.merklePaths || [])];
+      const positions = [...(proofData?.positions || [])];
+      const cardUIDs = [...(proofData?.cardUIDs || [])];
+      const nonces = [...(proofData?.nonces || [])];
+      const merklePaths = [...(proofData?.merklePaths || [])];
       
       // Pad to 5 if we have fewer
       while (positions.length < 5) positions.push(0);
@@ -757,8 +757,8 @@ export function useZKGameIntegration(options: UseZKGameIntegrationOptions = {}) 
       
       const proofService = await import('../lib/zk/proofService');
       const proof = await proofService.generateDealProof({
-        player_id: String(proofData.playerId || '1'),
-        merkle_root: proofData.merkleRoot,
+        player_id: String(proofData?.playerId || '1'),
+        merkle_root: proofData?.merkleRoot,
         positions: positions.slice(0, 5),
         card_uids: cardUIDs.slice(0, 5),
         nonces: nonces.slice(0, 5),

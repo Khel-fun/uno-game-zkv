@@ -72,6 +72,7 @@ const PreviewGame = () => {
         currentColor={currentColor}
         currentUser="Player 1"
         totalPlayers={playerCount}
+        playedCardsPile={[]}
       />
       {/* Controls Bar */}
       <div style={{
