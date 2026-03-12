@@ -1,7 +1,7 @@
 import React from 'react';
 import { MAX_PLAYERS } from '@/constants/gameConstants';
 
-const GameBackground = ({ turn, currentColor, currentUser, totalPlayers }) => {
+const GameBackground = ({ turn, currentColor, currentUser, totalPlayers, playedCardsPile }) => {
   // Determine if it's current user's turn or opponent's turn
   const turnType = turn === currentUser ? "current" : "opponent";
 
@@ -24,7 +24,38 @@ const GameBackground = ({ turn, currentColor, currentUser, totalPlayers }) => {
     'Y': 'yellow'
   };
   
-  const colorName = colorMap[currentColor] || 'blue';
+  // Extract color from the actual played card on the table
+  const getColorFromCard = (card) => {
+    if (!card) return 'R';
+    
+    // Handle different card formats
+    if (card.startsWith('skip')) return card.charAt(4); // skipR, skipG, etc.
+    if (card.startsWith('D2')) return card.charAt(2);   // D2R, D2G, etc.
+    if (card.startsWith('_')) return card.charAt(1);    // _R, _G (reverse)
+    if (card === 'W' || card === 'D4W') return currentColor || 'R'; // Wild cards use currentColor
+    
+    // Regular number cards: format is like "7G", "3B", "0R"
+    const colorChar = card.charAt(1);
+    return colorChar || 'R'; // Fallback to red if extraction fails
+  };
+  
+  const lastPlayedCard = playedCardsPile && playedCardsPile.length > 0 
+    ? playedCardsPile[playedCardsPile.length - 1] 
+    : null;
+  
+  const actualColor = getColorFromCard(lastPlayedCard);
+  
+  // Debug logging to help identify issues
+  if (lastPlayedCard && actualColor !== currentColor && lastPlayedCard !== 'W' && lastPlayedCard !== 'D4W') {
+    console.log('[GameBackground] Color mismatch detected:', {
+      lastPlayedCard,
+      extractedColor: actualColor,
+      currentColorState: currentColor,
+      willUse: actualColor
+    });
+  }
+  
+  const colorName = colorMap[actualColor] || 'red';
   
   return (
     <div style={{
