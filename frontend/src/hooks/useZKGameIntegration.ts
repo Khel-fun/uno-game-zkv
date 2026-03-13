@@ -758,7 +758,7 @@ export function useZKGameIntegration(options: UseZKGameIntegrationOptions = {}) 
       const proofService = await import('../lib/zk/proofService');
       const proof = await proofService.generateDealProof({
         player_id: String(proofData?.playerId || '1'),
-        merkle_root: proofData?.merkleRoot,
+        merkle_root: proofData?.merkleRoot || '0',
         positions: positions.slice(0, 5),
         card_uids: cardUIDs.slice(0, 5),
         nonces: nonces.slice(0, 5),
