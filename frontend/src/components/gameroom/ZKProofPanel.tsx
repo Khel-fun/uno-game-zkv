@@ -399,6 +399,8 @@ interface ZKProofPanelProps {
   };
 }
 
+const SUPPRESSED_PROOF_TOAST_CIRCUITS = new Set(['play', 'draw']);
+
 export function ZKProofPanel({ enabled, onToggle, stats }: ZKProofPanelProps) {
   const zkContext = useZK();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -410,6 +412,12 @@ export function ZKProofPanel({ enabled, onToggle, stats }: ZKProofPanelProps) {
     circuit: string,
     message: string
   ) => {
+    const normalizedCircuit = circuit.trim().toLowerCase();
+
+    if (SUPPRESSED_PROOF_TOAST_CIRCUITS.has(normalizedCircuit)) {
+      return;
+    }
+
     const notification: ProofNotification = {
       id: `${Date.now()}-${Math.random()}`,
       type,
@@ -417,7 +425,20 @@ export function ZKProofPanel({ enabled, onToggle, stats }: ZKProofPanelProps) {
       message,
       timestamp: Date.now(),
     };
-    setNotifications(prev => [notification, ...prev].slice(0, 5));
+    setNotifications(prev => {
+      const latest = prev[0];
+      if (
+        latest &&
+        latest.type === notification.type &&
+        latest.circuit === notification.circuit &&
+        latest.message === notification.message &&
+        notification.timestamp - latest.timestamp < 1500
+      ) {
+        return prev;
+      }
+
+      return [notification, ...prev].slice(0, 5);
+    });
   }, []);
 
   // Dismiss a notification
